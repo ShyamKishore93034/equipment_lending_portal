@@ -1,0 +1,6 @@
+# -- AI Prompt: "Create a .gitignore file for a Node.js project ignoring node_modules, .env, and database files."
+# -- AI Refactor: "Standard ignores; AI generated basic template for common files."
+
+node_modules
+.env
+*.db
