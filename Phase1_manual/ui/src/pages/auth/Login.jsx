@@ -4,103 +4,87 @@ import { login } from "../../services/auth";
 import AuthLayout from "../../components/layout/AuthLayout";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [creds, setCreds] = useState({ email: "", password: "" });
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const nav = useNavigate();
 
-  // Filter logic
   useEffect(() => {
-    const role = localStorage.getItem("role") ?? null;
-    console.log("User role on login page load:", role);
-    if (role === "admin") navigate("/admin/equipment");
-    else if (role === "student") navigate("/equipments");
-    else if (role === "staff") navigate("/requests");
-  }, [navigate]);
+    const r = localStorage.getItem("role");
+    if (r === "admin") nav("/admin/equipment");
+    if (r === "student") nav("/equipments");
+    if (r === "staff") nav("/requests");
+  }, [nav]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const update = (e) => {
+    setCreds((c) => ({ ...c, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setMsg("");
+    setBusy(true);
 
     try {
-      const data = await login(form.email, form.password);
-      console.log(data);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
-      localStorage.setItem("id", data.user.userId);
+      const res = await login(creds.email, creds.password);
 
-      // Redirect based on role
-      if (data.user.role === "admin") {
-        navigate("/admin/equipment");
-      } else if (data.user.role === "student") {
-        navigate("/equipments");
-      } else if (data.user.role === "staff") navigate("/requests");
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("role", res.user.role);
+      localStorage.setItem("id", res.user.userId);
+
+      if (res.user.role === "admin") return nav("/admin/equipment");
+      if (res.user.role === "student") return nav("/equipments");
+      if (res.user.role === "staff") return nav("/requests");
     } catch (err) {
-      setError(err.response?.data?.error || "Login failed");
+      setMsg(err.response?.data?.error || "Unable to login");
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
   return (
     <AuthLayout
-      title="Login"
+      title="Access Portal"
       footer={
-        <div>
-          <small className="text-muted">
-            <strong>Test Accounts:</strong>
-            <br />
-            Admin: <code>admin@example.com / admin123</code>
-            <br />
-            Student: <code>studenta@example.com / student123</code>
-            <br />
-            Staff: <code>staff@example.com / staff123</code>
-          </small>
-        </div>
+        <small className="text-muted">
+          <b>Demo Accounts</b><br/>
+          Admin → admin@example.com / admin123<br/>
+          Student → studenta@example.com / student123<br/>
+          Staff → staff@example.com / staff123
+        </small>
       }
     >
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <div className="mb-3">
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <button
-          type="submit"
-          className="btn btn-primary w-100"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
+      {msg && <div className="alert alert-warning py-2">{msg}</div>}
+
+      <form onSubmit={submit} className="mt-2">
+        <input
+          className="form-control mb-2"
+          name="email"
+          type="email"
+          placeholder="Your email address"
+          value={creds.email}
+          onChange={update}
+          disabled={busy}
+          required
+        />
+        <input
+          className="form-control mb-3"
+          name="password"
+          type="password"
+          placeholder="Your password"
+          value={creds.password}
+          onChange={update}
+          disabled={busy}
+          required
+        />
+        <button className="btn btn-success w-100" disabled={busy}>
+          {busy ? "Please wait..." : "Sign In"}
         </button>
       </form>
+
       <div className="text-center mt-3">
-        <a href="/signup" className="text-decoration-none">
-          Don't have an account? Signup
+        <a href="/signup" className="text-decoration-none small">
+          New user? Create account
         </a>
       </div>
     </AuthLayout>

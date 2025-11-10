@@ -25,8 +25,8 @@ This project demonstrates how AI can boost development efficiency, while I still
 
 | Folder | Description |
 |---|---|
-| `/manual` | My manually developed version (baseline system) |
-| `/ai-assisted` | Improved version with AI assisted refactoring + features |
+| `/Phase1_manual` | My manually developed version (baseline system) |
+| `/Pashe2_AI` | Improved version with AI assisted refactoring + features |
 
 ---
 

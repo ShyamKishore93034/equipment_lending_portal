@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signup } from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
-import AuthLayout from '../../components/layout/AuthLayout';
 
 export default function Signup() {
   const [form, setForm] = useState({
@@ -37,49 +36,55 @@ export default function Signup() {
   };
 
   return (
-    <AuthLayout title="Signup">
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
+        <h2 className="text-center text-2xl font-semibold text-gray-800 mb-6">
+          Create Account
+        </h2>
+
+        {error && (
+          <div className="bg-red-100 border border-red-300 text-red-600 px-3 py-2 rounded-md text-sm mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
             name="name"
-            className="form-control"
             placeholder="Full Name"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400"
             value={form.name}
             onChange={handleChange}
             required
             disabled={loading}
           />
-        </div>
-        <div className="mb-3">
+
           <input
             type="email"
             name="email"
-            className="form-control"
             placeholder="Email"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400"
             value={form.email}
             onChange={handleChange}
             required
             disabled={loading}
           />
-        </div>
-        <div className="mb-3">
+
           <input
             type="password"
             name="password"
-            className="form-control"
             placeholder="Password"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400"
             value={form.password}
             onChange={handleChange}
             required
             disabled={loading}
           />
-        </div>
-        <div className="mb-3">
+
           <select
             name="role"
-            className="form-select"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400"
             value={form.role}
             onChange={handleChange}
             disabled={loading}
@@ -88,14 +93,22 @@ export default function Signup() {
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
           </select>
+
+          <button
+            type="submit"
+            className="w-full bg-green-600 hover:bg-green-700 transition text-white font-medium py-2 rounded-lg"
+            disabled={loading}
+          >
+            {loading ? 'Creating...' : 'Create Account'}
+          </button>
+        </form>
+
+        <div className="text-center mt-5 text-sm text-blue-600">
+          <a href="/login" className="hover:underline">
+            Already have an account? Login
+          </a>
         </div>
-        <button type="submit" className="btn btn-success w-100" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Account'}
-        </button>
-      </form>
-      <div className="text-center mt-3">
-        <a href="/login" className="text-decoration-none">Already have an account? Login</a>
       </div>
-    </AuthLayout>
+    </div>
   );
 }

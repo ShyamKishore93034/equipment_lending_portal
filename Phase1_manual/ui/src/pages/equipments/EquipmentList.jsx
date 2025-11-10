@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
-import api from "../../services/api";
+import { createRequest } from "../../services/RequestService";
+import { getAllEquipmentAdmin } from "../../services/EquipmentService";
 import RequestFormModal from "../../components/equipment/request-form-modal/RequestFormModal";
-import { createRequest, returnRequest } from "../../services/RequestService";
-import {
-  getAllEquipmentAdmin,
-  createEquipment,
-  updateEquipment,
-  deleteEquipment,
-} from "../../services/EquipmentService";
 
 export default function EquipmentList() {
   const [equipment, setEquipment] = useState([]);
@@ -26,150 +20,109 @@ export default function EquipmentList() {
     setLoading(false);
   };
 
-  // Fetch all equipment
-  useEffect(() => {
-    loadEquipment();
-  }, []);
+  useEffect(() => { loadEquipment(); }, []);
 
-  // Filter logic
   useEffect(() => {
     let result = equipment;
-
-    if (search) {
-      result = result.filter((i) =>
-        i.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    if (category) {
-      result = result.filter((i) => i.category === category);
-    }
+    if (search) result = result.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+    if (category) result = result.filter(i => i.category === category);
     setFiltered(result);
   }, [search, category, equipment]);
 
   const handleSave = async (formData) => {
-    console.log("Saved data:", formData);
-    const payload = {
-      ...formData,
-      equipment_id: requestingEquipment.equipment_id,
-      user_id: userId,
-    };
-    console.log("Saved data:", payload);
-    try {
-      await createRequest(payload);
-      setShowModal(false);
-      window.alert("Request created successfully!");
-    } catch (error) {
-      console.error("Error creating request:", error);
-      console.error("Error creating request:", error.response.data.error);
-      window.alert(error.response.data.error || "Failed to create request.");
-    }
+    const payload = { ...formData, equipment_id: requestingEquipment.id, user_id: userId };
+    await createRequest(payload);
+    setShowModal(false);
+    alert("Request created successfully!");
     loadEquipment();
   };
 
-  const openCreateRequest = (equipment_id, name) => {
-    console.log("User ID:", localStorage.getItem("id"));
-    console.log("Opening request for:", name);
-    const data = {
-      equipment_id: equipment_id,
-      user_id: userId,
-      name: name,
-    };
-    setRequestingEquipment(data);
+  const openCreateRequest = (item) => {
+    setRequestingEquipment(item);
     setShowModal(true);
   };
 
-  // Get unique categories for dropdown
-  const categories = [...new Set(equipment.map((i) => i.category))];
+  const categories = [...new Set(equipment.map(i => i.category))];
 
-  if (loading)
-    return (
-      <div className="text-center">
-        <div className="spinner-border"></div>
-      </div>
-    );
+  if (loading) return <div className="text-center mt-5"><div className="spinner-border" /></div>;
 
   return (
     <div>
-      <h2 className="mb-4">Equipment List</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3 className="fw-bold">Browse Equipment</h3>
+      </div>
 
-      {/* Search & Filter */}
-      <div className="row mb-4 g-3">
-        <div className="col-md-6">
+      {/* Search + Filter */}
+      <div className="row g-3 mb-4">
+        <div className="col-md-5">
           <input
             type="text"
             className="form-control"
-            placeholder="Search by name..."
+            placeholder="Search equipment..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="col-md-4">
-          <select
-            className="form-select"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
+          <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
+            {categories.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
-        <div className="col-md-2">
-          <button
-            className="btn btn-outline-secondary w-100"
-            onClick={() => {
-              setSearch("");
-              setCategory("");
-            }}
-          >
-            Reset
+        <div className="col-md-3">
+          <button className="btn btn-outline-secondary w-100" onClick={() => { setSearch(""); setCategory(""); }}>
+            Reset Filters
           </button>
         </div>
       </div>
 
       {/* Cards */}
       <div className="row">
-        {filtered.length === 0 ? (
-          <p className="text-muted">No equipment found.</p>
-        ) : (
-          filtered.map((item) => (
-            <div className="col-md-4 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">{item.name}</h5>
-                  <p className="card-text">
-                    <strong>Category:</strong> {item.category}
-                    <br />
-                    <strong>Condition:</strong> {item.condition}
-                    <br />
-                    <strong>Qty:</strong> {item.quantity}
-                    <br />
-                    <strong>Available:</strong>{" "}
-                    {item.available > 0 ? item.available : "No"}
-                  </p>
+        {filtered.map((item) => (
+          <div className="col-md-4 mb-4" key={item.id}>
+            <div className="card shadow-sm h-100 border-0">
+              <div className="card-body">
+                <h5 className="mb-2 fw-semibold">{item.name}</h5>
+
+                <div className="mb-2">
+                  <span className="badge bg-secondary me-2">{item.category}</span>
+                  <span className="badge bg-info text-dark">{item.condition}</span>
                 </div>
-                <div className="card-footer bg-transparent">
-                  <button
-                    className="btn btn-sm btn-outline-primary w-100"
-                    disabled={!(item.available > 0)}
-                    onClick={() => openCreateRequest(item.id, item.name)}
-                  >
-                    Request
-                  </button>
+
+                <div className="mt-3">
+                  <div>
+                    <small className="text-muted">Quantity:</small> <b>{item.quantity}</b>
+                  </div>
+                  <div>
+                    <small className="text-muted">Available:</small>{" "}
+                    <b className={item.available > 0 ? "text-success" : "text-danger"}>
+                      {item.available > 0 ? item.available : "Not available"}
+                    </b>
+                  </div>
                 </div>
               </div>
+
+              <div className="card-footer bg-white border-0">
+                <button
+                  className="btn btn-primary w-100"
+                  disabled={!(item.available > 0)}
+                  onClick={() => openCreateRequest(item)}
+                >
+                  Request Borrow
+                </button>
+              </div>
             </div>
-          ))
+          </div>
+        ))}
+
+        {filtered.length === 0 && (
+          <div className="text-center text-muted mt-4">No equipment found</div>
         )}
       </div>
+
       <RequestFormModal
         show={showModal}
-        onHide={() => {
-          setShowModal(false);
-        }}
+        onHide={() => setShowModal(false)}
         onSave={handleSave}
         initialData={requestingEquipment}
       />
